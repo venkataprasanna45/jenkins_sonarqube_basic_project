@@ -1,15 +1,18 @@
 pipeline {
-    agent any
-    tools { 
-        maven "maven" 
+
+    agent any 
+    tools{
+        maven "maven"
     }
+
     stages {
-        stage('Checkout git') {
-            steps {
-               git branch: 'main', url: 'https://github.com/praveensirvi1212/jenkins_sonarqube_basic_project'
+
+        stage("git checkout"){
+            
+            steps{
+                git branch: 'main', url: 'https://github.com/praveensirvi1212/jenkins_sonarqube_basic_project'
             }
-        }
-        
+        } 
         stage ('Build & JUnit Test') {
             steps {
                 sh 'mvn install' 
@@ -20,21 +23,35 @@ pipeline {
                 }   
             }
         }
-        stage('SonarQube Analysis'){
+        stage('Static code analysis'){
+            
             steps{
-                   withSonarQubeEnv('sonarqube') {
-                        sh 'mvn clean verify sonar:sonar \
-                        -Dsonar.projectKey=devops-project-key \
-                        -Dsonar.host.url=$sonarurl \
-                        -Dsonar.login=$sonarlogin'
+                
+                script{
+                    
+                    stage('Static code analysis'){
+            
+            steps{
+                
+                script{
+                    
+                    withSonarQubeEnv(credentialsId: 'sonar-server')  {
+                        
+                        sh 'mvn clean package sonar:sonar'
                     }
+                   }
+                    
+                }
+            } {
+                        
+                        sh 'mvn clean package sonar:sonar'
+                    }
+                   }
+                    
+                }
             }
-        }
-        stage('Deploy'){
-            steps{
-                sh 'timeout 60s java -jar /var/lib/jenkins/workspace/devopscicd/target/demo-0.0.1-SNAPSHOT.jar'
-            }
-        }
-        }
+    
+
+           
     }
-        
+}
